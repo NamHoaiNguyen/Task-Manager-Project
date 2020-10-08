@@ -3,6 +3,7 @@ Create a task-manager which apply knowdledge about process, thread, semaphore an
 
 ## Assign task
 
+### MUST FINISH
 ----------------------------------MUST FINISH-----------------------------------
 1. Display system configuration (An).
 2. Display usage of system, including Cpu, Ram, Disk, etc...(Trung).
