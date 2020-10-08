@@ -1,8 +1,113 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/sched/signal.h>
+#include <linux/init.h>
+#include <linux/uaccess.h>
+#include <linux/miscdevice.h>
+#include <linux/sched.h>
+#include <linux/slab.h>
+
+static int dev_open(struct inode *, struct file *);
+static int dev_close(struct inode *, struct file *);
+static ssize_t dev_write(struct file *, const char __user *, size_t, loff_t *);
+static ssize_t dev_read(struct file *, char __user *, size_t, loff_t *);
+static long dev_ioctl(struct file *, unsigned int, unsigned long);
+char * get_task_state(long state);
+
 
 char buffer[256];
+struct task_info {
+	char comm[16];
+	long state;
+	int pid;
+};
+
+static struct file_operations fops = {
+	.owner = THIS_MODULE,
+	.open = dev_open,
+	.release = dev_close,
+	.read = dev_read,
+	//.write = dev_write,
+};
+
+static struct miscdevice my_dev = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "procid",
+	.fops = &fops,
+};
+
+
+static int dev_open(struct inode *inodep, struct file *filep)
+{
+	return 0;
+}
+
+static int dev_close(struct inode *inodep, struct file *filep)
+{
+	return 0;
+}
+
+//void get_list_task()
+//{
+//	struct task_struct *task_list;
+//	unsigned int process_count = 0;
+//	for_each_process(task_list) {
+//		pr_info("Process: %s\t PID:[%d]\t State:%s\n", 
+//                	task_list->comm, task_list->pid,
+//                	get_task_state(task_list->state));
+//        	process_count++;    
+//    	}
+//    
+//	pr_info("Number of processes:%u\n", process_count);
+//	return 0;
+//
+//}
+
+
+static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
+                        loff_t *offset)
+{
+	int ret, i;
+	struct task_struct **task_list;
+	struct task_info *info_task;
+	info_task = kmalloc(sizeof(struct task_info), GFP_KERNEL );
+	
+	unsigned int process_count = 0;
+	for_each_process(task_list) {
+	//	pr_info("Process: %s\t PID:[%d]\t State:%s\n", 
+        // 	      	task_list->comm, task_list->pid,
+          //      	get_task_state(task_list->state));
+        
+		
+		process_count++;   
+		
+    	//	ret = copy_to_user(buf, task_list, sizeof(struct task_info));
+
+	}
+
+	info_task = kmalloc(process_count * sizeof(struct task_info *), GFP_KERNEL);
+	
+	for_each_process(task_list) {
+		strcpy(info_task[i]->comm, task_lost->comm);
+		info_task[i]->pid = task_list->pid;
+		info_task[i]->state = tasl_list->state;
+	}
+
+	ret = copy_to_user(buf, info_task, sizeof(struct task_info *));
+   
+//	ret = copy_to_user(buff, str, sizeof(task_struct));
+	if (ret) {
+		pr_err("can not copy from user\n");
+		return -ENOMSG;
+	}
+
+
+//	get_task_list();
+
+	return len;
+}
+
+
 char * get_task_state(long state)
 {
     switch (state) {
@@ -37,11 +142,26 @@ static int test_tasks_init(void)
     }
     pr_info("Number of processes:%u\n", process_count);
     return 0;
+
+	int ret;
+
+	
+        ret = misc_register(&my_dev);
+	if (ret) {
+		pr_err("can not register device\n");
+		return ret;
+	}
+	pr_info("Init successfully\n");
+
+	return ret;
 }
 
 static void test_tasks_exit(void)
 {
     pr_info("%s: In exit\n", __func__);
+
+    	misc_deregister(&my_dev);
+	pr_info("goodbye\n");
 }
 
 MODULE_LICENSE("GPL");
