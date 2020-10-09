@@ -7,3 +7,5 @@
 *.cmd
 *.mk
 *.mod
+*.c~
+*.out

@@ -6,6 +6,9 @@
 #include <linux/miscdevice.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
+#include <linux/compiler.h>
+
+#include "task-list.h"
 
 static int dev_open(struct inode *, struct file *);
 static int dev_close(struct inode *, struct file *);
@@ -16,18 +19,15 @@ char * get_task_state(long state);
 
 
 char buffer[256];
-struct task_info {
-	char comm[16];
-	long state;
-	int pid;
-};
+//int process_count;
 
 static struct file_operations fops = {
 	.owner = THIS_MODULE,
 	.open = dev_open,
 	.release = dev_close,
 	.read = dev_read,
-	//.write = dev_write,
+	.write = dev_write,
+	.unlocked_ioctl = dev_ioctl,
 };
 
 static struct miscdevice my_dev = {
@@ -47,65 +47,177 @@ static int dev_close(struct inode *inodep, struct file *filep)
 	return 0;
 }
 
-//void get_list_task()
-//{
-//	struct task_struct *task_list;
-//	unsigned int process_count = 0;
-//	for_each_process(task_list) {
-//		pr_info("Process: %s\t PID:[%d]\t State:%s\n", 
-//                	task_list->comm, task_list->pid,
-//                	get_task_state(task_list->state));
-//        	process_count++;    
-//    	}
-//    
-//	pr_info("Number of processes:%u\n", process_count);
-//	return 0;
-//
-//}
+void push(struct task_info **head_ref, struct task_struct *task_list)
+{
+	struct task_info *node = (struct task_info *)vmalloc(sizeof(struct task_info));
+	
+	strcpy(node->comm, task_list->comm);
+        node->pid = task_list->pid;
+        node->state = task_list->state;
 
+	node->next = (*head_ref);
+
+	(*head_ref) = node;
+}
 
 static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
                         loff_t *offset)
 {
-	int ret, i;
-	struct task_struct **task_list;
-	struct task_info *info_task;
-	info_task = kmalloc(sizeof(struct task_info), GFP_KERNEL );
-	
-	unsigned int process_count = 0;
-	for_each_process(task_list) {
-	//	pr_info("Process: %s\t PID:[%d]\t State:%s\n", 
-        // 	      	task_list->comm, task_list->pid,
-          //      	get_task_state(task_list->state));
-        
-		
-		process_count++;   
-		
-    	//	ret = copy_to_user(buf, task_list, sizeof(struct task_info));
+	int ret;
+//	int j = 0;
+//	int i = 0;
+//	int process_count = 0;
+//	struct task_struct *task_list;
+//	struct task_info *info_task;	
+//
+//	for_each_process(task_list) {		
+//		process_count++;   		
+//    	}
+//	
+//	pr_info("process_count : %u", process_count);
+//	
+//
+//	info_task = vmalloc(process_count * sizeof(struct task_info));
+//	for_each_process(task_list) {
+//		strcpy(info_task[i].comm, task_list->comm);
+//                info_task[i].pid = task_list->pid;
+//                info_task[i].state = task_list->state;
+//		info_task[i].next = NULL;
+//                i++;
+//	}
+//	
+//	for (j = 0; j < process_count; j++) {
+//		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
+//                      info_task[j].comm, info_task[j].pid,
+//                      get_task_state(info_task[j].state), sizeof(info_task[j]));
+//	}
 
+
+//	ret = copy_to_user(buf, info_task, sizeof(process_count * sizeof(struct task_info)));
+
+	char *data = "Hello from the kernel world!\n";
+	size_t datalen = strlen(data);
+	if (len > datalen) {
+		len = datalen;
+	}
+	if (copy_to_user(buf, data, datalen)) {
+		return -EFAULT;
 	}
 
-	info_task = kmalloc(process_count * sizeof(struct task_info *), GFP_KERNEL);
+//	len = process_count * sizeof(struct task_info);
+//	len = sizeof(a);
+
+	pr_info("Value of ret : %d\n", ret);
+
+//	offset += len;
+//	vfree(info_task);
+	return len;
+}
+
+static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+{
+	void __user *argp = (void __user *)arg;
+	unsigned char *value = (unsigned char *)argp;	
+	//task *number_task = NULL;
+	int number_task, ret, j;
+	int i = 0;
+	int process_count = 0;
+	struct task_struct *task_list;
+	struct task_info **info_task;
+
+	switch (cmd) {
+	case IOCTL_NUMBER:
+		for_each_process(task_list) {
+                	process_count++;
+        	}
+
+		copy_to_user(arg, &process_count, sizeof(int));
+		break;
+	
+	case IOCTL_PROCESS:
+//	struct task_struct *task_list;
+//	struct task_info **info_task;
+	
+	for_each_process(task_list) {		
+		process_count++;   		
+    	}
+	
+	pr_info("process_count : %u", process_count);
+	info_task = vmalloc(process_count * sizeof(struct task_info *));
 	
 	for_each_process(task_list) {
-		strcpy(info_task[i]->comm, task_lost->comm);
+                info_task[i] = vmalloc(sizeof(struct task_info));
+
+		strcpy(info_task[i]->comm, task_list->comm);
 		info_task[i]->pid = task_list->pid;
-		info_task[i]->state = tasl_list->state;
+		info_task[i]->state = task_list->state;
+
+		i++;
+//		push(&info_task, task_list);
+	}
+	
+	for (j = 0; j < process_count; j++) {
+		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
+                      info_task[j]->comm, info_task[j]->pid,
+                      get_task_state(info_task[j]->state), sizeof(info_task[j]));
 	}
 
-	ret = copy_to_user(buf, info_task, sizeof(struct task_info *));
-   
-//	ret = copy_to_user(buff, str, sizeof(task_struct));
+
+//	pr_info ("Address of info_task : %p %p\n", (&info_task[0]->comm), &info_task[0]);
+
+	for (j = 0; j < process_count; j++) {
+
+		ret = copy_to_user(arg, info_task[j], sizeof(info_task[j]));
+ 		if (ret) {
+                	pr_err("can not copy from user\n");
+   	            	return -ENOMSG;
+        	}
+	}
+	
+	
+	pr_info("Value of ret : %d\n", ret);
+
+//	for (j = 0; j < process_count; j++) {
+//		vfree(info_task[i]);
+//	}
+	vfree(info_task);
+	return 0;
+
+
+	default:
+		return -ENOTTY;
+	}
+
+	return 0;
+}
+
+
+static ssize_t dev_write(struct file *filep, const char __user *buf, size_t len,
+                        loff_t *offset)
+{
+	int ret;
+	struct task_info *str = NULL;
+//	str = kmalloc(sizeof(struct task_info), GFP_KERNEL );
+//	ret = copy_from_user(str, buf, sizeof(struct task_info));
+//	if (ret) {
+//		pr_err("can not copy from user\n");
+//		return -ENOMSG;
+//	}
+//
+//	pr_info ("Value of ret : %d\n", ret);	
+//	printk(KERN_WARNING "Value of pid: %d, value of state: %l", str->pid, str->state);
+
+
+	char name[50] = "xin chao ten toi la nam";
+	ret = copy_from_user(name, buf, sizeof(buf));
 	if (ret) {
 		pr_err("can not copy from user\n");
 		return -ENOMSG;
 	}
-
-
-//	get_task_list();
-
+	
 	return len;
 }
+
 
 
 char * get_task_state(long state)
@@ -131,18 +243,6 @@ char * get_task_state(long state)
 
 static int test_tasks_init(void)
 {
-    struct task_struct *task_list;
-    unsigned int process_count = 0;
-    pr_info("%s: In init\n", __func__);
-    for_each_process(task_list) {
-        pr_info("Process: %s\t PID:[%d]\t State:%s\n", 
-                task_list->comm, task_list->pid,
-                get_task_state(task_list->state));
-        process_count++;    
-    }
-    pr_info("Number of processes:%u\n", process_count);
-    return 0;
-
 	int ret;
 
 	
@@ -158,8 +258,9 @@ static int test_tasks_init(void)
 
 static void test_tasks_exit(void)
 {
-    pr_info("%s: In exit\n", __func__);
+ 	pr_info("%s: In exit\n", __func__);
 
+//	kfree(info_task);
     	misc_deregister(&my_dev);
 	pr_info("goodbye\n");
 }
