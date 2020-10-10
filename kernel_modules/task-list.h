@@ -4,7 +4,7 @@ typedef struct task_info {
         long state;
         int pid;
 
-        struct task_info *next;
+//        struct task_info *next;
 }task_info;
 
 

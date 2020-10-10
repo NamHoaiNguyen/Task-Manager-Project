@@ -19,7 +19,6 @@ char * get_task_state(long state);
 
 
 char buffer[256];
-//int process_count;
 
 static struct file_operations fops = {
 	.owner = THIS_MODULE,
@@ -47,70 +46,74 @@ static int dev_close(struct inode *inodep, struct file *filep)
 	return 0;
 }
 
-void push(struct task_info **head_ref, struct task_struct *task_list)
-{
-	struct task_info *node = (struct task_info *)vmalloc(sizeof(struct task_info));
-	
-	strcpy(node->comm, task_list->comm);
-        node->pid = task_list->pid;
-        node->state = task_list->state;
-
-	node->next = (*head_ref);
-
-	(*head_ref) = node;
-}
+//void push(struct task_info **head_ref, struct task_struct *task_list)
+//{
+//	struct task_info *node = (struct task_info *)vmalloc(sizeof(struct task_info));
+//	
+//	strcpy(node->comm, task_list->comm);
+//        node->pid = task_list->pid;
+//        node->state = task_list->state;
+//
+//	node->next = (*head_ref);
+//
+//	(*head_ref) = node;
+//}
 
 static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
                         loff_t *offset)
 {
 	int ret;
-//	int j = 0;
-//	int i = 0;
-//	int process_count = 0;
-//	struct task_struct *task_list;
-//	struct task_info *info_task;	
-//
-//	for_each_process(task_list) {		
-//		process_count++;   		
-//    	}
-//	
-//	pr_info("process_count : %u", process_count);
-//	
-//
-//	info_task = vmalloc(process_count * sizeof(struct task_info));
-//	for_each_process(task_list) {
-//		strcpy(info_task[i].comm, task_list->comm);
-//                info_task[i].pid = task_list->pid;
-//                info_task[i].state = task_list->state;
-//		info_task[i].next = NULL;
-//                i++;
-//	}
-//	
-//	for (j = 0; j < process_count; j++) {
-//		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
-//                      info_task[j].comm, info_task[j].pid,
-//                      get_task_state(info_task[j].state), sizeof(info_task[j]));
-//	}
+	int j = 0;
+	int i = 0;
+	int process_count = 0;
+	struct task_struct *task_list;
+	struct task_info *info_task;	
 
+	for_each_process(task_list) {		
+		process_count++;   		
+    	}
+	
+	pr_info("process_count : %u", process_count);
+	
 
-//	ret = copy_to_user(buf, info_task, sizeof(process_count * sizeof(struct task_info)));
+	info_task = vmalloc(process_count * sizeof(struct task_info));
+	for_each_process(task_list) {
+        pr_info("Size struct: %d\n", sizeof(struct task_info));
 
-	char *data = "Hello from the kernel world!\n";
-	size_t datalen = strlen(data);
-	if (len > datalen) {
-		len = datalen;
+		strcpy(info_task[i].comm, task_list->comm);
+                info_task[i].pid = task_list->pid;
+                info_task[i].state = task_list->state;
+                i++;
 	}
-	if (copy_to_user(buf, data, datalen)) {
+	
+	for (j = 0; j < process_count; j++) {
+		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
+                      info_task[j].comm, info_task[j].pid,
+                      get_task_state(info_task[j].state), sizeof(info_task[j]));
+	}
+
+
+	ret = copy_to_user(buf, info_task, process_count * sizeof(struct task_info));
+
+//	char *data = "Hello from the kernel world!\n";
+//	size_t datalen = strlen(data);
+//	if (len > datalen) {
+//		len = datalen;
+//	}
+//	if (copy_to_user(buf, data, datalen)) {
+//		return -EFAULT;
+//	}
+//
+	if (ret) {
 		return -EFAULT;
 	}
 
-//	len = process_count * sizeof(struct task_info);
-//	len = sizeof(a);
-
+	
+	len = process_count * sizeof(struct task_info);
 	pr_info("Value of ret : %d\n", ret);
+	offset += len;
+	vfree(info_task);
 
-//	offset += len;
-//	vfree(info_task);
 	return len;
 }
 
@@ -118,12 +121,11 @@ static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 {
 	void __user *argp = (void __user *)arg;
 	unsigned char *value = (unsigned char *)argp;	
-	//task *number_task = NULL;
-	int number_task, ret, j;
-	int i = 0;
+	int number_task, ret;
+	int i = 0, j = 0;
 	int process_count = 0;
 	struct task_struct *task_list;
-	struct task_info **info_task;
+	struct task_info *info_task;
 
 	switch (cmd) {
 	case IOCTL_NUMBER:
@@ -135,54 +137,43 @@ static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 		break;
 	
 	case IOCTL_PROCESS:
-//	struct task_struct *task_list;
-//	struct task_info **info_task;
+		for_each_process(task_list) {		
+			process_count++;   		
+    		}
 	
-	for_each_process(task_list) {		
-		process_count++;   		
-    	}
+		pr_info("process_count : %u", process_count);
 	
-	pr_info("process_count : %u", process_count);
-	info_task = vmalloc(process_count * sizeof(struct task_info *));
+
+		info_task = vmalloc(process_count * sizeof(struct task_info));
+		for_each_process(task_list) {
+			strcpy(info_task[i].comm, task_list->comm);
+                	info_task[i].pid = task_list->pid;
+                	info_task[i].state = task_list->state;
+                	i++;
+		}
 	
-	for_each_process(task_list) {
-                info_task[i] = vmalloc(sizeof(struct task_info));
+		for (j = 0; j < process_count; j++) {
+			pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
+                      	info_task[j].comm, info_task[j].pid,
+                      	get_task_state(info_task[j].state), sizeof(info_task[j]));
+		}
 
-		strcpy(info_task[i]->comm, task_list->comm);
-		info_task[i]->pid = task_list->pid;
-		info_task[i]->state = task_list->state;
 
-		i++;
-//		push(&info_task, task_list);
-	}
+		ret = copy_to_user(buf, info_task, process_count * sizeof(struct task_info));
+
+		if (ret) {
+			return -EFAULT;
+		}
 	
-	for (j = 0; j < process_count; j++) {
-		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
-                      info_task[j]->comm, info_task[j]->pid,
-                      get_task_state(info_task[j]->state), sizeof(info_task[j]));
-	}
+		len = process_count * sizeof(struct task_info);
 
+		pr_info("Value of ret : %d\n", ret);
 
-//	pr_info ("Address of info_task : %p %p\n", (&info_task[0]->comm), &info_task[0]);
+		offset += len;
+		vfree(info_task);
 
-	for (j = 0; j < process_count; j++) {
-
-		ret = copy_to_user(arg, info_task[j], sizeof(info_task[j]));
- 		if (ret) {
-                	pr_err("can not copy from user\n");
-   	            	return -ENOMSG;
-        	}
-	}
-	
-	
-	pr_info("Value of ret : %d\n", ret);
-
-//	for (j = 0; j < process_count; j++) {
-//		vfree(info_task[i]);
-//	}
-	vfree(info_task);
-	return 0;
-
+	//	return len;
+		break;
 
 	default:
 		return -ENOTTY;
@@ -260,7 +251,6 @@ static void test_tasks_exit(void)
 {
  	pr_info("%s: In exit\n", __func__);
 
-//	kfree(info_task);
     	misc_deregister(&my_dev);
 	pr_info("goodbye\n");
 }
