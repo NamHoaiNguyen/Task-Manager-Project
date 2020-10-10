@@ -9,6 +9,7 @@
 #include <linux/compiler.h>
 
 #include "task-list.h"
+#include "task-list-kernel.h"
 
 static int dev_open(struct inode *, struct file *);
 static int dev_close(struct inode *, struct file *);
@@ -47,23 +48,24 @@ static int dev_close(struct inode *inodep, struct file *filep)
 	return 0;
 }
 
-void push(struct task_info **head_ref, struct task_struct *task_list)
-{
-	struct task_info *node = (struct task_info *)vmalloc(sizeof(struct task_info));
+
+//void push(struct task_info **head_ref, struct task_struct *task_list)
+//{
+//	struct task_info *node = (struct task_info *)vmalloc(sizeof(struct task_info));
 	
-	strcpy(node->comm, task_list->comm);
-        node->pid = task_list->pid;
-        node->state = task_list->state;
+//	strcpy(node->comm, task_list->comm);
+//        node->pid = task_list->pid;
+//        node->state = task_list->state;
 
-	node->next = (*head_ref);
+//	node->next = (*head_ref);
 
-	(*head_ref) = node;
-}
+//	(*head_ref) = node;
+//}
 
-static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
-                        loff_t *offset)
-{
-	int ret;
+//static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
+//                        loff_t *offset)
+//{
+//	int ret;
 //	int j = 0;
 //	int i = 0;
 //	int process_count = 0;
@@ -95,12 +97,121 @@ static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
 
 //	ret = copy_to_user(buf, info_task, sizeof(process_count * sizeof(struct task_info)));
 
-	char *data = "Hello from the kernel world!\n";
-	size_t datalen = strlen(data);
-	if (len > datalen) {
-		len = datalen;
+//	char *data = "Hello from the kernel world!\n";
+//	size_t datalen = strlen(data);
+//	if (len > datalen) {
+//		len = datalen;
+//	}
+
+//	if (copy_to_user(buf, data, datalen)) {
+
+int count_task(void)
+{
+	struct task_struct *task_list;
+	int process_count = 0;
+
+	for_each_process(task_list) {		
+		process_count++;   		
+    	}
+
+	return process_count;
+}
+
+void loop_task_list (struct task_info *info_task)
+{
+	int i = 0;
+	struct task_struct *task_list, *task_children;
+        struct list_head *list;
+	struct mm_struct *mm, *active_mm;
+        struct vm_area_struct *vma, *active_vma;
+
+	for_each_process(task_list) {
+       		/*Info of process*/
+		strcpy(info_task[i].comm, task_list->comm);
+                info_task[i].pid = task_list->pid;
+                info_task[i].state = task_list->state;
+		
+		/*Use to calculate usage cpu of process*/
+		info_task[i].utime = task_list->utime;
+		info_task[i].stime = task_list->stime;
+		info_task[i].start_time = task_list->start_time;
+		info_task[i].total_time = info_task[i].utime + info_task[i].stime;
+		
+		/*vma_struct of process*/
+		mm = task_list->mm;
+		active_mm = task_list->active_mm;
+
+		if (mm != NULL) {
+			for (vma = mm->mmap ; vma ; vma = vma->vm_next) {
+				info_task[i].vma_size += vma->vm_end - vma->vm_start; 
+			}
+		} 
+	/*
+		if (mm == NULL) {
+		  	for (active_vma = active_mm->mmap ; active_vma ; active_vma = active_vma->vm_next) {
+                                info_task[i].vma_size += active_vma->vm_end - active_vma->vm_start;
+                        }
+		}
+	*/	
+		list_for_each(list, &task_list->children){
+			task_children = list_entry(list, struct task_struct, children);	
+			info_task[i].total_time = task_children->utime + task_children->stime;
+		}
+
+		pr_info ("Total of time : %lu\n", info_task[i].start_time);
+                i++;
 	}
-	if (copy_to_user(buf, data, datalen)) {
+}
+
+static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
+                        loff_t *offset)
+{
+	/*Declare needed variable*/
+	int ret;
+	int j = 0;
+	int i = 0;
+	int process_count = 0;
+	struct task_struct *task_list, *task_children;
+	struct task_info *info_task;	
+	struct list_head *list;
+
+	process_count = count_task();
+	
+	info_task = vmalloc(process_count * sizeof(struct task_info));
+	
+	loop_task_list(info_task);
+
+//	for_each_process(task_list) {
+//        pr_info("Size struct: %d\n", sizeof(struct task_info));
+//		strcpy(info_task[i].comm, task_list->comm);
+//                info_task[i].pid = task_list->pid;
+//                info_task[i].state = task_list->state;
+//		info_task[i].utime = task_list->utime;
+//		info_task[i].stime = task_list->stime;
+//		info_task[i].start_time = task_list->start_time;
+//		info_task[i].total_time = info_task[i].utime + info_task[i].stime;
+//
+//		list_for_each(list, &task_list->children){
+//			task_children = list_entry(list, struct task_struct, children);	
+//			info_task[i].total_time = task_children->utime + task_children->stime;
+//		}
+//
+//		pr_info ("Total of time : %lu\n", info_task[i].start_time);
+//                i++;
+//	}
+
+	/*Get numbers of process and info of each process*/
+//	pr_info("process_count : %u", process_count);
+//	for (j = 0; j < process_count; j++) {
+//		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
+//                      info_task[j].comm, info_task[j].pid,
+//                      get_task_state(info_task[j].state), sizeof(info_task[j]));
+//	}
+
+
+	ret = copy_to_user(buf, info_task, process_count * sizeof(struct task_info));
+
+	if (ret) {
 		return -EFAULT;
 	}
 
@@ -166,6 +277,13 @@ static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 //	pr_info ("Address of info_task : %p %p\n", (&info_task[0]->comm), &info_task[0]);
 
 	for (j = 0; j < process_count; j++) {
+		ret = copy_to_user(arg, info_task, process_count * sizeof(struct task_info));
+
+		if (ret) {
+			return -EFAULT;
+		}
+	
+		size_t len = process_count * sizeof(struct task_info);
 
 		ret = copy_to_user(arg, info_task[j], sizeof(info_task[j]));
  		if (ret) {
@@ -177,11 +295,16 @@ static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 	
 	pr_info("Value of ret : %d\n", ret);
 
+
 //	for (j = 0; j < process_count; j++) {
 //		vfree(info_task[i]);
 //	}
 	vfree(info_task);
 	return 0;
+
+//		offset += len;
+		vfree(info_task);
+
 
 
 	default:
