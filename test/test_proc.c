@@ -29,20 +29,13 @@ int main()
 
 
 	int num_byte;
-	char test[20];
-
-	test_info = (struct task_info *)malloc(count * sizeof(struct task_info));
-	 if ((num_byte = read(fd, test_info, count * sizeof(struct task_info))) < 0) {
+	char test[50];
+	 if ((num_byte = read(fd, test, 50)) < 0) {
                  perror("read failed\n"); 
                  return -1;
 	 }
 
 	printf("%d\n", num_byte);
-//	printf("%s\n", test);
-	for (i = 0; i < count; i++) {
-		printf("Process : %s\t, PID: %d\n", test_info[i].comm, test_info[i].pid);
-	}
-
 
 	return 0;
 }
