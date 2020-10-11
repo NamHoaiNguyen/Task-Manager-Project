@@ -7,7 +7,7 @@ INC_FILES = info_sys.h
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 main: main.o info_sys.o
-	$(CC) -o $@ $< info_sys.o $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 info_sys.o: info_sys.c 
 	$(CC) -c $< $(CFLAGS)
