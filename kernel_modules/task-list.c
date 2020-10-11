@@ -7,6 +7,7 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/compiler.h>
+#include <linux/mm.h>
 
 #include "task-list.h"
 #include "task-list-kernel.h"
@@ -48,63 +49,6 @@ static int dev_close(struct inode *inodep, struct file *filep)
 	return 0;
 }
 
-
-//void push(struct task_info **head_ref, struct task_struct *task_list)
-//{
-//	struct task_info *node = (struct task_info *)vmalloc(sizeof(struct task_info));
-	
-//	strcpy(node->comm, task_list->comm);
-//        node->pid = task_list->pid;
-//        node->state = task_list->state;
-
-//	node->next = (*head_ref);
-
-//	(*head_ref) = node;
-//}
-
-//static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
-//                        loff_t *offset)
-//{
-//	int ret;
-//	int j = 0;
-//	int i = 0;
-//	int process_count = 0;
-//	struct task_struct *task_list;
-//	struct task_info *info_task;	
-//
-//	for_each_process(task_list) {		
-//		process_count++;   		
-//    	}
-//	
-//	pr_info("process_count : %u", process_count);
-//	
-//
-//	info_task = vmalloc(process_count * sizeof(struct task_info));
-//	for_each_process(task_list) {
-//		strcpy(info_task[i].comm, task_list->comm);
-//                info_task[i].pid = task_list->pid;
-//                info_task[i].state = task_list->state;
-//		info_task[i].next = NULL;
-//                i++;
-//	}
-//	
-//	for (j = 0; j < process_count; j++) {
-//		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
-//                      info_task[j].comm, info_task[j].pid,
-//                      get_task_state(info_task[j].state), sizeof(info_task[j]));
-//	}
-
-
-//	ret = copy_to_user(buf, info_task, sizeof(process_count * sizeof(struct task_info)));
-
-//	char *data = "Hello from the kernel world!\n";
-//	size_t datalen = strlen(data);
-//	if (len > datalen) {
-//		len = datalen;
-//	}
-
-//	if (copy_to_user(buf, data, datalen)) {
-
 int count_task(void)
 {
 	struct task_struct *task_list;
@@ -120,10 +64,11 @@ int count_task(void)
 void loop_task_list (struct task_info *info_task)
 {
 	int i = 0;
+	int count_vma = 0;
 	struct task_struct *task_list, *task_children;
         struct list_head *list;
 	struct mm_struct *mm, *active_mm;
-        struct vm_area_struct *vma, *active_vma;
+        struct vm_area_struct *vma, *vma_last, *active_vma;
 
 	for_each_process(task_list) {
        		/*Info of process*/
@@ -136,7 +81,8 @@ void loop_task_list (struct task_info *info_task)
 		info_task[i].stime = task_list->stime;
 		info_task[i].start_time = task_list->start_time;
 		info_task[i].total_time = info_task[i].utime + info_task[i].stime;
-		
+
+
 		/*vma_struct of process*/
 		mm = task_list->mm;
 		active_mm = task_list->active_mm;
@@ -144,15 +90,39 @@ void loop_task_list (struct task_info *info_task)
 		if (mm != NULL) {
 			for (vma = mm->mmap ; vma ; vma = vma->vm_next) {
 				info_task[i].vma_size += vma->vm_end - vma->vm_start; 
+			
+				count_vma++;
+				if (count_vma == 1) {
+					info_task[i].text_start	= vma->vm_start;
+					info_task[i].text_end = vma->vm_end;
+				} 
+				if (count_vma == 2) {
+					info_task[i].data_start	= vma->vm_start;
+					info_task[i].data_end = vma->vm_end;
+				}
+				if (count_vma == 3) {
+					info_task[i].bss_start	= vma->vm_start;
+					info_task[i].bss_end = vma->vm_end;
+				}
+				if (count_vma == 4) {
+					info_task[i].heap_start	= vma->vm_start;
+					info_task[i].heap_end = vma->vm_end;
+				}
+				
+				if (vma->vm_flags & VM_GROWSDOWN) {
+					info_task[i].stack_start = vma->vm_start;
+                                        info_task[i].stack_end = vma->vm_end;
+				}
 			}
 		} 
-	/*
+/*	
 		if (mm == NULL) {
 		  	for (active_vma = active_mm->mmap ; active_vma ; active_vma = active_vma->vm_next) {
                                 info_task[i].vma_size += active_vma->vm_end - active_vma->vm_start;
-                        }
+         			  pr_info ("hello world\n");
+	 		}
 		}
-	*/	
+*/		
 		list_for_each(list, &task_list->children){
 			task_children = list_entry(list, struct task_struct, children);	
 			info_task[i].total_time = task_children->utime + task_children->stime;
@@ -181,47 +151,18 @@ static ssize_t dev_read(struct file *filep, char __user *buf, size_t len,
 	
 	loop_task_list(info_task);
 
-//	for_each_process(task_list) {
-//        pr_info("Size struct: %d\n", sizeof(struct task_info));
-//		strcpy(info_task[i].comm, task_list->comm);
-//                info_task[i].pid = task_list->pid;
-//                info_task[i].state = task_list->state;
-//		info_task[i].utime = task_list->utime;
-//		info_task[i].stime = task_list->stime;
-//		info_task[i].start_time = task_list->start_time;
-//		info_task[i].total_time = info_task[i].utime + info_task[i].stime;
-//
-//		list_for_each(list, &task_list->children){
-//			task_children = list_entry(list, struct task_struct, children);	
-//			info_task[i].total_time = task_children->utime + task_children->stime;
-//		}
-//
-//		pr_info ("Total of time : %lu\n", info_task[i].start_time);
-//                i++;
-//	}
-
-	/*Get numbers of process and info of each process*/
-//	pr_info("process_count : %u", process_count);
-//	for (j = 0; j < process_count; j++) {
-//		pr_info("Process: %s\t PID:[%d]\t State:%s\t Size:%d",
-//                      info_task[j].comm, info_task[j].pid,
-//                      get_task_state(info_task[j].state), sizeof(info_task[j]));
-//	}
-
-
 	ret = copy_to_user(buf, info_task, process_count * sizeof(struct task_info));
 
 	if (ret) {
 		return -EFAULT;
 	}
 
-//	len = process_count * sizeof(struct task_info);
-//	len = sizeof(a);
+	len = process_count * sizeof(struct task_info);
 
 	pr_info("Value of ret : %d\n", ret);
 
-//	offset += len;
-//	vfree(info_task);
+	offset += len;
+	vfree(info_task);
 	return len;
 }
 
@@ -264,7 +205,6 @@ static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 		info_task[i]->state = task_list->state;
 
 		i++;
-//		push(&info_task, task_list);
 	}
 	
 	for (j = 0; j < process_count; j++) {
@@ -272,9 +212,6 @@ static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
                       info_task[j]->comm, info_task[j]->pid,
                       get_task_state(info_task[j]->state), sizeof(info_task[j]));
 	}
-
-
-//	pr_info ("Address of info_task : %p %p\n", (&info_task[0]->comm), &info_task[0]);
 
 	for (j = 0; j < process_count; j++) {
 		ret = copy_to_user(arg, info_task, process_count * sizeof(struct task_info));
@@ -383,7 +320,6 @@ static void test_tasks_exit(void)
 {
  	pr_info("%s: In exit\n", __func__);
 
-//	kfree(info_task);
     	misc_deregister(&my_dev);
 	pr_info("goodbye\n");
 }
