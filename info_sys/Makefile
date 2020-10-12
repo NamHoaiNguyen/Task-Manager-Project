@@ -7,12 +7,12 @@ INC_FILES = info_sys.h
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 main: main.o info_sys.o
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) -pthread
 
 info_sys.o: info_sys.c 
 	$(CC) -c $< $(CFLAGS)
 
 main.o: main.c 
-	$(CC) -c $< $(CFLAGS)
+	$(CC) -c $< $(CFLAGS) -pthread
 clean:
 	@rm main main.o info_sys.o 
