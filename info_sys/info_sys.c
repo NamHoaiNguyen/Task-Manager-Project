@@ -19,7 +19,7 @@ void handle_signal()
 {
 	FILE *file;
 	printf("Dau buoi re rach.\n");
-	file = fopen("cpu.txt", "w");
+	file = fopen("cpu.txt", "a");
 
 	fputs(a.m_cpu, file);
 	fclose(file);
@@ -30,7 +30,7 @@ void handle_read_memory()
 {
 	FILE *file;
 	printf("DUNG CO MA LOI O DAY.\n");
-	file = fopen("memory.txt", "w");
+	file = fopen("memory.txt", "a");
   	fputs (a.mem_total, file);
         fputs (a.mem_free, file);
         fputs (a.mem_available, file);
@@ -39,7 +39,26 @@ void handle_read_memory()
 }
 
 
-void read_cpu()
+void handle_new()
+{
+	FILE *file;
+        printf("Dau buoi re rach.\n");
+        file = fopen("total.txt", "w");
+
+        fputs(a.m_cpu, file);
+        printf("deo hieu sao ko print ra duoc\n");
+
+        printf("DUNG CO MA LOI O DAY.\n");
+   
+        fputs (a.mem_total, file);
+        fputs (a.mem_free, file);
+        fputs (a.mem_available, file);
+        printf("DEN DUOC DAY TUC LA KHONG LOI.\n");
+        fclose(file);
+
+}
+
+void read_sysinfo()
 {
 	pid_t pid;
 	FILE *file;
@@ -71,7 +90,7 @@ void read_cpu()
 
 	if (pid == 0) {
 		while (1) {
-		signal(SIGUSR1, handle_signal);
+		signal(SIGUSR1, handle_new);
 		printf("Signal cua ban than may : %d\n", getpid());
 		char x[100] = "/proc/cpuinfo";
     		fp = fopen(x, "r");
@@ -81,8 +100,24 @@ void read_cpu()
         		fgets (a.m_cpu, 100, fp);
         		printf("CPU: %s", a.m_cpu);
         		fclose(fp);
-    		}
-    		else
+    	
+	  char x[100] = "/proc/meminfo";
+                fp = fopen(x, "r");
+                if(fp != NULL)
+                {
+                        fgets (a.mem_total, 100, fp);
+                        fseek( fp, 28, SEEK_SET );
+                        fgets (a.mem_free, 100, fp);
+                        fseek( fp, 56, SEEK_SET );
+                        fgets (a.mem_available, 100, fp);
+                        printf("%s", a.mem_total);
+                        printf("%s", a.mem_free);
+                        printf("%s", a.mem_available);
+                        fclose(fp);
+                }
+
+		}
+		else
         		printf("Can't open file !");
 		printf("Child process of cpu terminated.\n");
 	 sleep(1);
@@ -136,6 +171,8 @@ void read_memory()
         		printf("%s", a.mem_available);
        			fclose(fp);
 		}
+
+
 		sleep(1);
 		}
     }
@@ -147,13 +184,14 @@ void display_sys()
 {
     pthread_t cpu_info;
     pthread_t mem_info;
-//    read_cpu();
-    read_memory();
+    read_sysinfo();
+//    read_memory();
 
 //    pthread_create(&cpu_info, NULL, read_cpu, NULL);
 //    pthread_create(&mem_info, NULL, read_memory, NULL);
 //    pthread_create(&cpu_info, NULL, read_cpu, NULL);
 
+//    pthread_exit(NULL);
 }
 
 

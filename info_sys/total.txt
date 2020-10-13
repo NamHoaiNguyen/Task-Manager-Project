@@ -1,0 +1,4 @@
+Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
+MemTotal:        8044784 kB
+MemFree:         1971356 kB
+MemAvailable:    4378456 kB
