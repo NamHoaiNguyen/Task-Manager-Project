@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 		display_sys();
 	}
 	
-	if (sel == 2)
+	else if (sel == 2)
 	{
 		pthread_t thread_read_file;
 		pthread_t thread_signal;
@@ -27,4 +27,5 @@ int main(int argc, char **argv)
 	}
 
 	return 0;
+	
 }
