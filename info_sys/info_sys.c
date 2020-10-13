@@ -18,23 +18,19 @@ struct sys_info a;
 void handle_signal()
 {
 	FILE *file;
-	printf("Dau buoi re rach.\n");
 	file = fopen("cpu.txt", "a");
 
 	fputs(a.m_cpu, file);
 	fclose(file);
-	printf("deo hieu sao ko print ra duoc\n");
 }
 
 void handle_read_memory()
 {
 	FILE *file;
-	printf("DUNG CO MA LOI O DAY.\n");
 	file = fopen("memory.txt", "a");
   	fputs (a.mem_total, file);
         fputs (a.mem_free, file);
         fputs (a.mem_available, file);
-	printf("DEN DUOC DAY TUC LA KHONG LOI.\n");
 	fclose(file);
 }
 
@@ -42,18 +38,13 @@ void handle_read_memory()
 void handle_new()
 {
 	FILE *file;
-        printf("Dau buoi re rach.\n");
         file = fopen("total.txt", "w");
 
         fputs(a.m_cpu, file);
-        printf("deo hieu sao ko print ra duoc\n");
-
-        printf("DUNG CO MA LOI O DAY.\n");
-   
+  
         fputs (a.mem_total, file);
         fputs (a.mem_free, file);
         fputs (a.mem_available, file);
-        printf("DEN DUOC DAY TUC LA KHONG LOI.\n");
         fclose(file);
 
 }
@@ -69,20 +60,20 @@ void read_sysinfo()
        		sleep(1);
 		int check = kill(pid, SIGUSR1);
 
-		printf("Signal co thanh cong khong : %d\n", check);
+//		printf("Signal co thanh cong khong : %d\n", check);
 
-		printf("PID cua thang con may la : %d\n", pid);
-       		if (returnStatus == 0)  // Verify child process terminated without error.
-                {
-                       printf("The child process terminated normally second.\n");
-
-                }
-
-                if (returnStatus == 1)
-                {
-                        printf("The child process terminated with an error!.");
-                }
-
+//		printf("PID cua thang con may la : %d\n", pid);
+//       		if (returnStatus == 0)  // Verify child process terminated without error.
+//                {
+//                       printf("The child process terminated normally second.\n");
+//
+//                }
+//
+//                if (returnStatus == 1)
+//                {
+//                        printf("The child process terminated with an error!.");
+//                }
+//
 		}
         }
 
@@ -91,7 +82,7 @@ void read_sysinfo()
 	if (pid == 0) {
 		while (1) {
 		signal(SIGUSR1, handle_new);
-		printf("Signal cua ban than may : %d\n", getpid());
+//		printf("Signal cua ban than may : %d\n", getpid());
 		char x[100] = "/proc/cpuinfo";
     		fp = fopen(x, "r");
     		if(fp != NULL)
@@ -100,9 +91,9 @@ void read_sysinfo()
         		fgets (a.m_cpu, 100, fp);
         		printf("CPU: %s", a.m_cpu);
         		fclose(fp);
-    	
-	  char x[100] = "/proc/meminfo";
-                fp = fopen(x, "r");
+		}    	
+	  	char y[100] = "/proc/meminfo";
+                fp = fopen(y, "r");
                 if(fp != NULL)
                 {
                         fgets (a.mem_total, 100, fp);
@@ -114,7 +105,7 @@ void read_sysinfo()
                         printf("%s", a.mem_free);
                         printf("%s", a.mem_available);
                         fclose(fp);
-                }
+               // }
 
 		}
 		else
