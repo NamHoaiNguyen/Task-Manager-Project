@@ -1,12 +1,40 @@
-Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
-MemTotal:        8044784 kB
-MemFree:         1096972 kB
-MemAvailable:    3793844 kB
-Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
-MemTotal:        8044784 kB
-MemFree:         1090884 kB
-MemAvailable:    3788080 kB
-Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
-MemTotal:        8044784 kB
-MemFree:         1091436 kB
-MemAvailable:    3788632 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        12013332 kB
+MemAvailable:   13186060 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        11976188 kB
+MemAvailable:   13155164 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        11974684 kB
+MemAvailable:   13153660 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        11967296 kB
+MemAvailable:   13146280 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        11967296 kB
+MemAvailable:   13146280 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        11974116 kB
+MemAvailable:   13153108 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        11973108 kB
+MemAvailable:   13152100 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        11974116 kB
+MemAvailable:   13153108 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        10959452 kB
+MemAvailable:   12603404 kB
+Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
+MemTotal:       16134472 kB
+MemFree:        10957632 kB
+MemAvailable:   12601584 kB
