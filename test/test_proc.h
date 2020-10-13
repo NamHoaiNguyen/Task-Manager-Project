@@ -29,3 +29,7 @@ uu64 cpu_total_time;
 
 int open_file();
 void *read_file(void *argp);
+void *read_data(void *argp);
+void *get_signal(void *argp);
+
+

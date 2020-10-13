@@ -102,15 +102,15 @@ void *read_data(void *argp)
 				prev_info[i] = test_info[i].total_time;
 					prev_cpu_total_time = cpu_total_time;
 				continue;
-				printf("Gia tri diff : %lu\n", total_time_diff);
+//				printf("Gia tri diff : %lu\n", total_time_diff);
 			}
 			total_time_diff = cpu_total_time - prev_cpu_total_time;
 			printf("Process : %s\t, PID: %d\t, stack_start :%lx\t, stack_end: %lx\t, heap_start: %lx\t, heap_end:%lx\n"
                                 , test_info[i].comm, test_info[i].pid,test_info[i].stack_start
                                 , test_info[i].stack_end, test_info[i].heap_start, test_info[i].heap_end); 
 
-			printf("Prev: %lu,   Cur: %lu\n", prev_info[i], test_info[i].total_time);	
-			printf("Time_diff: %lu\n", total_time_diff);				
+//			printf("Prev: %lu,   Cur: %lu\n", prev_info[i], test_info[i].total_time);	
+//			printf("Time_diff: %lu\n", total_time_diff);				
 			
 			unsigned long minus = 100 * (test_info[i].total_time - prev_info[i]);
 					
@@ -153,16 +153,16 @@ void *get_signal (void *argp)
 	return NULL;
 }
 
-int main()
-{
-	pthread_t thread_read_file;
-	pthread_t thread_signal;	
-
-	pthread_create(&thread_read_file, NULL, read_data, NULL);
-	
-	pthread_create(&thread_signal, NULL, get_signal, NULL);
-
-	pthread_exit(NULL);
-	return 0;
-}
+//int main()
+//{
+//	pthread_t thread_read_file;
+//	pthread_t thread_signal;	
+//
+//	pthread_create(&thread_read_file, NULL, read_data, NULL);
+//	
+//	pthread_create(&thread_signal, NULL, get_signal, NULL);
+//
+//	pthread_exit(NULL);
+//	return 0;
+//}
 

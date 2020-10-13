@@ -18,7 +18,7 @@ struct sys_info a;
 void handle_signal()
 {
 	FILE *file;
-	file = fopen("cpu.txt", "a");
+	file = fopen("cpu.txt", "w");
 
 	fputs(a.m_cpu, file);
 	fclose(file);
@@ -27,7 +27,7 @@ void handle_signal()
 void handle_read_memory()
 {
 	FILE *file;
-	file = fopen("memory.txt", "a");
+	file = fopen("memory.txt", "w");
   	fputs (a.mem_total, file);
         fputs (a.mem_free, file);
         fputs (a.mem_available, file);
@@ -38,7 +38,7 @@ void handle_read_memory()
 void handle_new()
 {
 	FILE *file;
-        file = fopen("total.txt", "w");
+        file = fopen("total.txt", "a");
 
         fputs(a.m_cpu, file);
   
@@ -173,7 +173,8 @@ void read_memory()
 
 void display_sys()
 {
-    pthread_t cpu_info;
+    printf("Check co nhay vao day ko.\n");
+	pthread_t cpu_info;
     pthread_t mem_info;
     read_sysinfo();
 //    read_memory();

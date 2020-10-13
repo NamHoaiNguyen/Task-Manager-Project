@@ -10,16 +10,16 @@ CFLAGS = -I.
 
 .PHONY: main info_sys.o main.o test_proc.o
 %.o: %.c $(INFO_SYS_H) $(TEST_H)
-	$(CC) -c -o $@ $^ $(CFLAGS)
+	$(CC) -c -o $@ $^ $(CFLAGS) 
 
 main: main.o info_sys.o test_proc.o
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) -pthread
 
 info_sys.o: $(INFO_SYS_C)
 	$(CC) -c $< $(CFLAGS)
 
 test_proc.o: $(TEST_C)
-	$(CC) -c $< $(CFLAGS)
+	$(CC) -c $< $(CFLAGS)  
 
 main.o: main.c
 	$(CC) -c $< $(CFLAGS)
